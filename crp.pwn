@@ -9,7 +9,7 @@
 
 #include <a_samp>
 #include <a_mysql>
-#include <a_mysql_yinline>
+//#include <a_mysql_yinline>
 #include <streamer>
 #include <sscanf2>
 #include <Pawn.CMD>
@@ -210,6 +210,7 @@ ShowDialog(playerid, dialogid)
         case DIALOG_REGISTER: return ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_PASSWORD, ""SERVER_NAME" - Registrarse", "Bienvenido, esta cuenta no está registrada.\nIngresa una contraseña para continuar", "Aceptar", "Cancelar");
         case DIALOG_REGISTER_EMAIL: return ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_INPUT, ""SERVER_NAME" - Email", "Ahora necesitamos que registres tu Email, ya que es la única manera de\nrecuperar tu contraseña\ntTranquilo, no sufrirás SPAM ni suscripciones", "Aceptar", "Cancelar");
         case DIALOG_LOGIN: return ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_PASSWORD, ""SERVER_NAME" - Ingresar", "Bienvenido de nuevo, esta cuenta si está registrada, ingresa la\ncontraseña para ingresar", "Aceptar", "Cancelar");
+        case DIALOG_BUY_COINS: ShowPlayerDialog(playerid, dialogid, DIALOG_SYTLE_INPUT, "Comprar coins", "Ingresa cuantas coins quieres comprar", "Aceptar", "Cancelar");
     }
 
     return 1;
@@ -252,7 +253,7 @@ SavePlayerData(playerid)
 
 public OnPlayerRequestClass(playerid, classid)
 {
-    inline CheckPlayerRegister()
+    /*inline CheckPlayerRegister()
     {
         new rows;
         if(cache_get_row_count(rows))
@@ -275,7 +276,7 @@ public OnPlayerRequestClass(playerid, classid)
 
     new DB_Query[120];
     mysql_format(Database, DB_Query, sizeof DB_Query, "SELECT id, name, salt, pass FROM player WHERE id = %d;", PI[playerid][pi_ID]);
-    mysql_tquery_inline(Database, DB_Query, using inline CheckPlayerRegister);
+    mysql_tquery_inline(Database, DB_Query, using inline CheckPlayerRegister);*/
 
     return 1;
 }
