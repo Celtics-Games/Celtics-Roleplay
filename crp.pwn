@@ -14,7 +14,6 @@
 #include <sscanf2>
 #include <Pawn.CMD>
 #include <Pawn.RakNet>
-
 #undef MAX_PLAYERS
 #define MAX_PLAYERS     150
 
@@ -92,6 +91,101 @@ new ADMIN_LEVELS[][] =
     "Desarrollador"
 };
 
+
+  
+/*
+
+    Celtics Roleplay
+    LuisSAMP, KapeX
+
+*/
+
+
+#include <a_samp>
+#include <a_mysql>
+//#include <a_mysql_yinline>
+#include <streamer>
+#include <sscanf2>
+#include <Pawn.CMD>
+#include <Pawn.RakNet>
+
+#undef MAX_PLAYERS
+#define MAX_PLAYERS     150
+
+#define SERVER_VERSION  "1.0"
+#define BUILD_VERSION   "04/04/2020"
+
+#define SERVER_NAME         "Celtics Roleplay"
+#define SERVER_HOSTNAME     "[ESP] |    Celtics Roleplay    | (Español)"
+#define SERVER_GAMEMODE     "Roleplay en español"
+#define SERVER_LANGUAGE     "Español - Spanish"
+#define SERVER_WEBURL       "Próximamente"
+#define SERVER_COIN         "CR"
+
+/* RCON */
+#define RCON_PASS       "lska@04"
+
+/* MySQL */
+#define MYSQL_HOST      "localhost"
+#define MYSQL_PASS      ""
+#define MYSQL_USER      "root"
+#define MYSQL_DB        "crp"
+
+new MySQL:Database, bool:server_loaded, TOTAL_PLAYERS//,
+//SERVER_TIME[2], SERVER_WEATHER = 11;
+
+new Float:New_User_Pos[4] = {1773.307250, -1896.441040, 13.551166, 270.0};
+
+#define MAX_TIMERS_PER_PLAYER       30
+
+new Coin_Price = 100000;
+
+main()
+{
+    print("--- > "SERVER_NAME" < ---");
+}
+
+enum Temp_Enum
+{
+    pt_IP[16],
+    pt_NAME[24],
+    bool:pt_USER_EXIT,
+    bool:pt_USER_LOGGED,
+    pt_RP_NAME[24],
+    pt_TIMERS[MAX_TIMERS_PER_PLAYER]
+};
+new PLAYER_TEMP[MAX_PLAYERS][Temp_Enum];
+
+enum enum_PI
+{
+    pi_ID,
+    pi_IP[16],
+    pi_NAME[24],
+    pi_CASH,
+    pi_SKIN,
+    Float:pi_POS[3],
+    Float:pi_ANGLE,
+    pi_MEDICINE,
+    pi_CRACK,
+    pi_ADMIN_LEVEL,
+    Float:pi_HEALTH,
+    Float:pi_ARMOUR,
+    pi_GENDER,
+    pi_STATE,
+    pi_PASS[64 + 1],
+    pi_SALT[17]
+};
+new PI[MAX_PLAYERS][enum_PI];
+
+new ADMIN_LEVELS[][] = 
+{
+    "Ayudante",
+    "Moderador",
+    "Operador",
+    "Administrador",
+    "Desarrollador"
+};
+
 public OnGameModeInit()
 {
     SetGameModeText(SERVER_GAMEMODE);
@@ -102,6 +196,7 @@ public OnGameModeInit()
 
     ConnectDatabase();
     UsePlayerPedAnims();
+    SpawnVehicles();
 
     LoadServerInfo();
     return 1;
@@ -210,7 +305,6 @@ ShowDialog(playerid, dialogid)
         case DIALOG_REGISTER: return ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_PASSWORD, ""SERVER_NAME" - Registrarse", "Bienvenido, esta cuenta no está registrada.\nIngresa una contraseña para continuar", "Aceptar", "Cancelar");
         case DIALOG_REGISTER_EMAIL: return ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_INPUT, ""SERVER_NAME" - Email", "Ahora necesitamos que registres tu Email, ya que es la única manera de\nrecuperar tu contraseña\ntTranquilo, no sufrirás SPAM ni suscripciones", "Aceptar", "Cancelar");
         case DIALOG_LOGIN: return ShowPlayerDialog(playerid, dialogid, DIALOG_STYLE_PASSWORD, ""SERVER_NAME" - Ingresar", "Bienvenido de nuevo, esta cuenta si está registrada, ingresa la\ncontraseña para ingresar", "Aceptar", "Cancelar");
-        case DIALOG_BUY_COINS: ShowPlayerDialog(playerid, dialogid, DIALOG_SYTLE_INPUT, "Comprar coins", "Ingresa cuantas coins quieres comprar", "Aceptar", "Cancelar");
     }
 
     return 1;
@@ -297,4 +391,136 @@ forward KickPlayer(playerid);
 public KickPlayer(playerid)
 {
     return Kick(playerid);
+}
+
+RegisterNewPlayer(playerid)
+{
+    if(PLAYER_TEMP[playerid][pt_USER_EXIT]) return 0;
+
+    new DB_Query[120];
+    format(DB_Query, sizeof DB_Query, "INSERT INTO player\
+        (name, salt, pass, cash, skin, gender, pos_x, pos_y, pos_z, angle, health, armour, admin_level)\
+        VALUES \
+        ('%e', '%e', '%e', '%e', %d, %d, %d, %f, %f, %f, %f, %f, %f, %d)\
+    ", PI[playerid][pi_NAME], PI[playerid][pi_SALT], PI[playerid][pi_PASS], PI[playerid][pi_CASH], PI[playerid][pi_SKIN], PI[playerid][pi_GENDER],
+    PI[playerid][pi_POS][0], PI[playerid][pi_POS][1], PI[playerid][pi_POS][2], PI[playerid][pi_ANGLE], PI[playerid][pi_HEALTH], PI[playerid][pi_ARMOUR],
+    PI[playerid][pi_ADMIN_LEVEL]);
+
+    mysql_tquery(Database, DB_Query, "OnPlayeRegister", "i", playerid);
+    return 1;
+}
+
+forward OnPlayerRegister(playerid);
+public OnPlayerRegister(playerid)
+{
+    print("Jugador registrado");
+    SendClientMessage(playerid, -1, "Bienvenido!");
+
+    return 1;
+}
+
+public OnPlayerUpdate(playerid)
+{
+    new Float:player_health;
+    GetPlayerHealth(playerid, player_health);
+
+    if(player_health > 100.0) return Kick(playerid);
+
+    return 1;
+}
+
+CheckPassword(playerid, pass[])
+{
+    if(!strcmp(pass, PI[playerid][pi_PASS], false))
+    {
+        LoadPlayerData(playerid);
+        return true;
+    }
+    else
+    {
+        PLAYER_TEMP[playerid][pt_BAD_LOGIN_ATTEMPS] ++;
+        if(PLAYER_TEMP[playerid][pt_BAD_LOGIN_ATTEMPS] >= 3) return Kick(playerid);
+        ShowDialog(playerid, DIALOG_LOGIN);
+
+        return false;
+    }
+
+    return false;
+}
+
+public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+{
+    switch(dialogid)
+    {
+        case DIALOG_REGISTER:
+        {
+            if(response)
+            {
+                if(strlen(inputtext) < 8 || strlen(inputtext) > 24) return ShowDialog(playerid, dialogid);
+
+                format(PI[playerid][pi_NAME], 24, "%s", PLAYER_TEMP[playerid][pt_NAME]);
+                format(PI[playerid][pi_IP], 16, "%s", PLAYER_TEMP[playerid][pt_IP]);
+
+                new salt[16];
+                getRandomSalt(salt);
+                format(PI[playerid][pi_SALT], 16, "%s", salt);
+
+                SHA256_PassHash(inputtext, PI[playerid][pi_SALT], PI[playerid][pi_PASS], 64 + 1);
+                RegisterNewPlayer(playerid);
+
+                return 1;
+            }
+            else Kick(playerid);
+        }
+        case DIALOG_LOGIN:
+        {
+            if(!response) return Kick(playerid);
+            if(!strlen(inputtext)) return ShowDialog(playerid, dialogid);
+
+            new password[64 + 1];
+            SHA256_PassHash(inputtext, PI[playerid][pi_SALT], password, sizeof password);
+            CheckPassword(playerid, password);
+
+            return 1;
+        }
+    }
+
+    return 1;
+}
+
+LoadPlayerData(playerid)
+{
+    new DB_Query[120];
+    format(DB_Query, sizeof DB_Query, "SELECT cash, skin, gender, pos_x, pos_y, pos_z, angle FROM player WHERE id = %d;", PI[playerid][pi_ID]);
+    mysql_tquery(Database, DB_Query, "LoadPlayerDataLoaded", "i", playerid);
+
+    return 1;
+}
+
+forward LoadPlayerDataLoaded(playerid);
+public LoadPlayerDataLoaded(playerid)
+{
+    new count;
+    cache_get_row_count(count);
+    if(count)
+    {
+        cache_get_value_name_int(0, "cash", PI[playerid][pi_CASH]);
+        cache_get_value_name_int(0, "skin", PI[playerid][pi_SKIN]);
+    }
+
+    return 1;
+}
+
+SpawnVehicles()
+{
+    CreateVehicle(481, 1768.4666, -1905.9497, 13.0901, 0.0000, -1, -1, 100);
+    CreateVehicle(481, 1767.4142, -1905.8678, 13.0901, 0.0000, -1, -1, 100);
+    CreateVehicle(481, 1766.1255, -1905.8784, 13.0901, 0.0000, -1, -1, 100);
+    CreateVehicle(481, 1763.4052, -1905.9004, 13.0901, 359.7867, -1, -1, 100);
+    CreateVehicle(481, 1764.7534, -1905.8895, 13.0901, 0.0000, -1, -1, 100);
+    CreateVehicle(481, 1761.1735, -1905.9080, 13.0901, 359.7867, -1, -1, 100);
+    CreateVehicle(481, 1762.2684, -1905.9276, 13.0901, 359.7867, -1, -1, 100);
+    CreateVehicle(481, 1760.2510, -1905.8459, 13.0901, 359.7867, -1, -1, 100);
+
+    return 1;
 }
