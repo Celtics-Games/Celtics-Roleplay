@@ -37,7 +37,7 @@
 #define MYSQL_USER      "root"
 #define MYSQL_DB        "crp"
 
-new MySQL:Database, bool:server_loaded, TOTAL_PLAYERS//,
+new MySQL:Database, bool:server_loaded, TOTAL_PLAYERS;//,
 //SERVER_TIME[2], SERVER_WEATHER = 11;
 
 new Float:New_User_Pos[4] = {1773.307250, -1896.441040, 13.551166, 270.0};
