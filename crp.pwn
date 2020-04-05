@@ -42,7 +42,7 @@ new MySQL:Database, bool:server_loaded, TOTAL_PLAYERS;//,
 
 new Float:New_User_Pos[4] = {1773.307250, -1896.441040, 13.551166, 270.0};
 
-new Skin_Intro: 250;
+new Skin_Intro = 250;
 
 #define MAX_TIMERS_PER_PLAYER       30
 
