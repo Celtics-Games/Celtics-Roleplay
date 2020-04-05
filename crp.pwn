@@ -37,12 +37,10 @@
 #define MYSQL_USER      "root"
 #define MYSQL_DB        "crp"
 
-new MySQL:Database, bool:server_loaded, TOTAL_PLAYERS//,
+new MySQL:Database, bool:server_loaded, TOTAL_PLAYERS;//,
 //SERVER_TIME[2], SERVER_WEATHER = 11;
 
 new Float:New_User_Pos[4] = {1773.307250, -1896.441040, 13.551166, 270.0};
-
-new Skin_Intro: 250;
 
 #define MAX_TIMERS_PER_PLAYER       30
 
@@ -60,7 +58,8 @@ enum Temp_Enum
     bool:pt_USER_EXIT,
     bool:pt_USER_LOGGED,
     pt_RP_NAME[24],
-    pt_TIMERS[MAX_TIMERS_PER_PLAYER]
+    pt_TIMERS[MAX_TIMERS_PER_PLAYER],
+    pt_BAD_LOGIN_ATTEMPS
 };
 new PLAYER_TEMP[MAX_PLAYERS][Temp_Enum];
 
@@ -85,7 +84,7 @@ enum enum_PI
 };
 new PI[MAX_PLAYERS][enum_PI];
 
-new ADMIN_LEVELS[][] = 
+new ADMIN_LEVELS[][] =
 {
     "Ayudante",
     "Moderador",
@@ -431,4 +430,13 @@ SpawnVehicles()
     CreateVehicle(481, 1760.2510, -1905.8459, 13.0901, 359.7867, -1, -1, 100);
 
     return 1;
+}
+
+getRandomSalt(salt[], length = sizeof salt)
+{
+    for(new i = 0; i != length; i ++)
+	{
+		salt[i] = random(2) ? (random(26) + (random(2) ? 'a' : 'A')) : (random(10) + '0');
+	}
+	return true;
 }
